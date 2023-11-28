@@ -1,8 +1,18 @@
+struct Person {
+  name: String,
+  last_name: String,
+  age: u32,
+}
 fn main() {
-  let a= 10;
-  let b = &a;
-  let c = &b;
+  let person = Person {
+    name: "Noah".to_string(),
+    last_name: "Shin".to_string(),
+    age: 30,
+  };
 
-  println!("{}", a == **c);
+  println!("{}", person.name);
+  println!("{}", person.last_name);
+  println!("{}", person.age);
+
 }
 
