@@ -1,16 +1,52 @@
-import init, { World } from "snake_game";
+import init, { World, Direction, GameStatus } from "snake_game";
+import { rnd } from "./utils/rnd";
 
-init().then((_) => {
+init().then((wasm) => {
   const CELL_SIZE = 20;
+  const WORLD_WIDTH = 8;
+  const snakeSpawnIdx = rnd(WORLD_WIDTH * WORLD_WIDTH);
 
-  const world = World.new();
+  const world = World.new(WORLD_WIDTH, snakeSpawnIdx);
   const worldWidth = world.width();
 
-  const canvas = <HTMLCanvasElement> document.getElementById("snake-canvas");
+  const points = document.getElementById("points");
+  const gameStatus = document.getElementById("game-status");
+  const gameControlBtn = document.getElementById("game-control-btn");
+  const canvas = <HTMLCanvasElement>document.getElementById("snake-canvas");
+
   const ctx = canvas.getContext("2d");
 
   canvas.height = worldWidth * CELL_SIZE;
   canvas.width = worldWidth * CELL_SIZE;
+
+  gameControlBtn.addEventListener("click", (_) => {
+    const status = world.game_status();
+
+    if (status === undefined) {
+      gameControlBtn.textContent = "Playing...";
+      world.start_game();
+      play();
+    } else {
+      location.reload();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    switch (e.code) {
+      case "ArrowUp":
+        world.change_snake_dir(Direction.Up);
+        break;
+      case "ArrowRight":
+        world.change_snake_dir(Direction.Right);
+        break;
+      case "ArrowDown":
+        world.change_snake_dir(Direction.Down);
+        break;
+      case "ArrowLeft":
+        world.change_snake_dir(Direction.Left);
+        break;
+    }
+  });
 
   function drawWorld() {
     ctx.beginPath();
@@ -28,31 +64,70 @@ init().then((_) => {
     ctx.stroke();
   }
 
-  function drawSnake() {
-    const snakeIdx = world.snake_head_idx();
-    const col = snakeIdx % worldWidth;
-    const row = Math.floor(snakeIdx / worldWidth);
+  function drawReward() {
+    const idx = world.reward_cell();
+    const col = idx % worldWidth;
+    const row = Math.floor(idx / worldWidth);
 
     ctx.beginPath();
+    ctx.fillStyle = "#FF0000";
     ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     ctx.stroke();
+  }
+
+  function drawSnake() {
+    const snakeCells = new Uint32Array(
+      wasm.memory.buffer,
+      world.snake_cells(),
+      world.snake_length()
+    );
+
+    snakeCells
+      .slice()
+      .reverse()
+      .forEach((cellIdx, i) => {
+        const col = cellIdx % worldWidth;
+        const row = Math.floor(cellIdx / worldWidth);
+
+        ctx.fillStyle = i === snakeCells.length - 1 ? "#7878db" : "#000000";
+
+        ctx.beginPath();
+        ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      });
+
+    ctx.stroke();
+  }
+
+  function drawGameStatus() {
+    gameStatus.textContent = world.game_status_text();
+    points.textContent = world.points().toString();
   }
 
   function paint() {
     drawWorld();
     drawSnake();
+    drawReward();
+    drawGameStatus();
   }
 
-  function update() {
+  function play() {
+    const status = world.game_status();
+
+    if (status == GameStatus.Won || status == GameStatus.Lost) {
+      gameControlBtn.textContent = "Re-Play";
+      return;
+    }
+
+    const fps = 3;
     setTimeout(() => {
+      console.log("Playing!");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      world.update();
+      world.step();
       paint();
       // the method takes a callback to invoked before the next repaint
-      requestAnimationFrame(update);
-    }, 100);
+      requestAnimationFrame(play);
+    }, 1000 / fps);
   }
 
   paint();
-  update();
 });
