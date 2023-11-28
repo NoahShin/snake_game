@@ -3,7 +3,7 @@ import { rnd } from "./utils/rnd";
 
 init().then((wasm) => {
   const CELL_SIZE = 20;
-  const WORLD_WIDTH = 8;
+  const WORLD_WIDTH = 32;
   const snakeSpawnIdx = rnd(WORLD_WIDTH * WORLD_WIDTH);
 
   const world = World.new(WORLD_WIDTH, snakeSpawnIdx);
@@ -118,7 +118,9 @@ init().then((wasm) => {
       return;
     }
 
-    const fps = 3;
+    // const fps = 3;
+    const fps = world.points() > 0 ? 3 + world.points() : 3;
+
     setTimeout(() => {
       console.log("Playing!");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
