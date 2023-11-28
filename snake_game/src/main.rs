@@ -5,7 +5,7 @@ fn main() {
 
   message_2.push_str(" World");
 
-  println!("{}", message);
   println!("{}", message_2);
+  println!("{}", message);
 }
 
