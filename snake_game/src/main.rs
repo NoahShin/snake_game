@@ -1,16 +1,11 @@
 fn main() {
     
-  let mut message = "Hello World";
+  let mut message = String::from("Hello");
+  let message_2 = &mut message;
+
+  message_2.push_str(" World");
 
   println!("{}", message);
-
-  message = "Hi Noah";
-
-  println!("Changed Text: {}", message);
-
-  let mut age = 19;
-
-  println!("age: {}", age);
-  age = 10;
-  println!("changed age: {}", age);
+  println!("{}", message_2);
 }
+
