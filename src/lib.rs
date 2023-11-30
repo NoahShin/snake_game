@@ -1,4 +1,3 @@
-
 use wasm_bindgen::prelude::*;
 use wee_alloc::WeeAlloc;
 
@@ -16,7 +15,7 @@ pub enum Direction {
     Up,
     Right,
     Down,
-    Left
+    Left,
 }
 
 #[wasm_bindgen]
@@ -50,7 +49,6 @@ impl Snake {
     }
 }
 
-
 #[wasm_bindgen]
 pub struct World {
     width: usize,
@@ -65,7 +63,6 @@ pub struct World {
 #[wasm_bindgen]
 impl World {
     pub fn new(width: usize, snake_idx: usize) -> World {
-
         let snake = Snake::new(snake_idx, 3);
         let size = width * width;
 
@@ -84,8 +81,10 @@ impl World {
         let mut reward_cell;
 
         loop {
-          reward_cell = rnd(max);
-          if !snake_body.contains(&SnakeCell(reward_cell)) { break; }
+            reward_cell = rnd(max);
+            if !snake_body.contains(&SnakeCell(reward_cell)) {
+                break; // 몸통에 있는지 확인하고 없으면 break, 몸통쪽으로 생기면 안되니까 계속 랜덤값
+            }
         }
 
         Some(reward_cell)
@@ -104,7 +103,7 @@ impl World {
     }
 
     pub fn snake_head_idx(&self) -> usize {
-       self.snake.body[0].0
+        self.snake.body[0].0
     }
 
     pub fn start_game(&mut self) {
@@ -127,7 +126,9 @@ impl World {
     pub fn change_snake_dir(&mut self, direction: Direction) {
         let next_cell = self.gen_next_snake_cell(&direction);
 
-        if self.snake.body[1].0 == next_cell.0 { return; }
+        if self.snake.body[1].0 == next_cell.0 {
+            return;
+        }
 
         self.next_cell = Some(next_cell);
         self.snake.direction = direction;
@@ -150,7 +151,7 @@ impl World {
                     Some(cell) => {
                         self.snake.body[0] = cell;
                         self.next_cell = None;
-                    },
+                    }
                     None => {
                         self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
                     }
@@ -161,7 +162,8 @@ impl World {
                 }
 
                 if self.snake.body[1..self.snake_length()].contains(&self.snake.body[0]) {
-                    self.status = Some(GameStatus::Lost)
+                    // 첫째 idx(뱀머리) 가 내 body 안에 idx 가 contain 되어있으면 죽었다는 뜻이니까
+                    self.status = Some(GameStatus::Lost);
                 }
 
                 if self.reward_cell == Some(self.snake_head_idx()) {
@@ -170,12 +172,13 @@ impl World {
                         self.reward_cell = World::gen_reward_cell(self.size, &self.snake.body);
                     } else {
                         self.reward_cell = None;
-                        self.status = Some(GameStatus::Won)
+                        // 그럴리 없겠지만.. 더이상 없으면..
+                        self.status = Some(GameStatus::Won);
                     }
 
                     self.snake.body.push(SnakeCell(self.snake.body[1].0));
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -186,40 +189,39 @@ impl World {
 
         return match direction {
             Direction::Right => {
-                let treshold = (row + 1) * self.width;
-                if snake_idx + 1 == treshold {
-                    SnakeCell(treshold - self.width)
+                let threshold = (row + 1) * self.width;
+                if snake_idx + 1 == threshold {
+                    SnakeCell(threshold - self.width)
                 } else {
                     SnakeCell(snake_idx + 1)
                 }
-            },
+            }
             Direction::Left => {
-                let treshold = row * self.width;
-                if snake_idx == treshold {
-                    SnakeCell(treshold + (self.width - 1))
+                let threshold = row * self.width;
+                if snake_idx == threshold {
+                    SnakeCell(threshold + (self.width - 1))
                 } else {
                     SnakeCell(snake_idx - 1)
                 }
-            },
+            }
             Direction::Up => {
-                let treshold = snake_idx - (row * self.width);
-                if snake_idx == treshold {
-                    SnakeCell((self.size - self.width) + treshold)
+                let threshold = snake_idx - row * self.width;
+                if snake_idx == threshold {
+                    SnakeCell(self.size - self.width + threshold)
                 } else {
                     SnakeCell(snake_idx - self.width)
                 }
-            },
+            }
             Direction::Down => {
-                let treshold = snake_idx + ((self.width - row) * self.width);
-                if snake_idx + self.width == treshold {
-                    SnakeCell(treshold - ((row + 1) * self.width))
+                let threshold = snake_idx + (self.width - row) * self.width;
+                if snake_idx + self.width == threshold {
+                    SnakeCell(threshold - (row + 1) * self.width)
                 } else {
                     SnakeCell(snake_idx + self.width)
                 }
-            },
+            }
         };
     }
-
 }
 
 // wasm-pack build --target web

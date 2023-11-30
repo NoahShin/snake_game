@@ -64,13 +64,13 @@ init().then((wasm) => {
     ctx.stroke();
   }
 
-  function drawReward() {
-    const idx = world.reward_cell();
+  function drawReward() { // 빨강 랜덤하게 뜨기
+    const idx = world.reward_cell(); 
     const col = idx % worldWidth;
     const row = Math.floor(idx / worldWidth);
 
     ctx.beginPath();
-    ctx.fillStyle = "#FF0000";
+    ctx.fillStyle = "#FF0000"; // 빨강
     ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     ctx.stroke();
   }
@@ -104,9 +104,9 @@ init().then((wasm) => {
   }
 
   function paint() {
-    drawWorld();
-    drawSnake();
-    drawReward();
+    drawWorld(); // 백그라운드 그리기
+    drawSnake(); // 뱀 항상 그리기
+    drawReward(); // 빨강 랜덤하게 뜨기
     drawGameStatus();
   }
 
@@ -118,16 +118,16 @@ init().then((wasm) => {
       return;
     }
 
-    // const fps = 3;
+    // const fps = 3; // 이러면 속도가 일정해서 재미가 없음
     const fps = world.points() > 0 ? 3 + world.points() : 3;
-
-    setTimeout(() => {
+    // TODO: 벽에 부딪히면 죽게 하고 싶은데..
+    setTimeout(() => { // 계속 그려
       console.log("Playing!");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       world.step();
       paint();
       // the method takes a callback to invoked before the next repaint
-      requestAnimationFrame(play);
+      requestAnimationFrame(play); // , 애니메이션과 그 외의 반복 작업을 수행하기 위해 사용된다. 이 메서드는 브라우저의 리페인트 주기에 맞게 콜백 함수를 실행하도록 예약한다
     }, 1000 / fps);
   }
 
